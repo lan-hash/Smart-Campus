@@ -1,2 +1,23 @@
-# 项目排除路径
+# Maven
 /campus-backend/target/
+
+# 敏感配置（本地真实密码，不提交）
+campus-backend/src/main/resources/application-local.yml
+
+# IDE
+.idea/
+*.iml
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 前端依赖
+campus-frontend/node_modules/
+campus-frontend/dist/
+
+# 上传文件
+campus-backend/uploads/
+
+# 日志
+*.log
