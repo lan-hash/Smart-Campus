@@ -181,9 +181,13 @@ const fetchUnread = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (userStore.isLogin) {
-    userStore.fetchUserInfo().catch(() => {})
+    try {
+      await userStore.fetchUserInfo()
+    } catch (e) {
+      // token 失效则跳转登录
+    }
     fetchUnread()
   }
 })

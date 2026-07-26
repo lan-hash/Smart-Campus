@@ -41,9 +41,9 @@ public class JwtUtils {
      * 解析 Token，返回 Claims
      */
     public Claims parseToken(String token) {
-        return Jwts.parser()
+        return Jwts.parserBuilder()
                 .setSigningKey(getKey())
-                .setSigningKey(getKey())
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }

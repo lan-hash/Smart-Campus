@@ -197,14 +197,25 @@ const formatTime = (t) => {
 }
 
 const fetchUserInfo = async () => {
+  // 查看自己的主页：直接用 store 数据，避免多余请求
+  if (isSelf.value && userStore.userInfo) {
+    userInfo.value = userStore.userInfo
+    stats.value = {
+      postCount: userStore.userInfo.postCount,
+      followingCount: userStore.userInfo.followCount,
+      fansCount: userStore.userInfo.fansCount
+    }
+    return
+  }
   loading.value = true
   try {
-    const [detail, stat] = await Promise.all([
-      getUserDetail(userId.value),
-      getUserStats(userId.value)
-    ])
+    const detail = await getUserDetail(userId.value)
     userInfo.value = detail || {}
-    stats.value = stat || {}
+    stats.value = {
+      postCount: detail?.postCount,
+      followingCount: detail?.followCount,
+      fansCount: detail?.fansCount
+    }
     isFollowing.value = !!detail?.isFollowing
   } catch (e) {
     // 错误已处理

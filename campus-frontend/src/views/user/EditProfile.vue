@@ -189,6 +189,7 @@ const handleAvatarChange = async (e) => {
     const url = typeof res === 'string' ? res : (res?.url || res?.data || res)
     if (url) {
       form.avatar = url
+      userStore.setUserInfo({ avatar: url })
       ElMessage.success('头像上传成功')
     }
   } catch (err) {
