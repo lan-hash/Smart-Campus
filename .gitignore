@@ -26,3 +26,6 @@ campus-backend/uploads/
 
 # 日志
 *.log
+
+# 本地文档（不上传到仓库）
+*.docx
