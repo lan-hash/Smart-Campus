@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mapper.ForumCommentMapper">
+
+    <select id="selectTopComments" resultType="com.campus.vo.ForumCommentVO">
+        SELECT
+            c.id, c.post_id AS postId, c.user_id AS userId,
+            c.parent_id AS parentId, c.reply_to_user_id AS replyToUserId,
+            c.content, c.like_count AS likeCount,
+            c.create_time AS createTime,
+            u.nickname AS authorNickname, u.avatar AS authorAvatar
+        FROM forum_comment c
+        LEFT JOIN sys_user u ON c.user_id = u.id
+        WHERE c.post_id = #{postId} AND c.parent_id = 0
+        ORDER BY c.create_time ASC
+    </select>
+
+    <select id="selectChildComments" resultType="com.campus.vo.ForumCommentVO">
+        SELECT
+            c.id, c.post_id AS postId, c.user_id AS userId,
+            c.parent_id AS parentId, c.reply_to_user_id AS replyToUserId,
+            c.content, c.like_count AS likeCount,
+            c.create_time AS createTime,
+            u.nickname AS authorNickname, u.avatar AS authorAvatar,
+            ru.nickname AS replyToNickname
+        FROM forum_comment c
+        LEFT JOIN sys_user u ON c.user_id = u.id
+        LEFT JOIN sys_user ru ON c.reply_to_user_id = ru.id
+        WHERE c.parent_id IN
+        <foreach collection="parentIds" item="pid" open="(" separator="," close=")">
+            #{pid}
+        </foreach>
+        ORDER BY c.create_time ASC
+    </select>
+
+</mapper>
