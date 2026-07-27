@@ -41,6 +41,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/user/register",
                         "/forum/categories",
                         "/forum/posts",
+                        "/forum/posts/*",
                         "/forum/posts/*/comments",
                         "/confession/list",
                         "/confession/*/comments",
