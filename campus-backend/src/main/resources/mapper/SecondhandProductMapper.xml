@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mapper.SecondhandProductMapper">
+
+    <select id="selectProductPage" resultType="com.campus.vo.SecondhandProductVO">
+        SELECT
+            p.id, p.user_id AS userId, p.category_id AS categoryId,
+            c.name AS categoryName,
+            p.title, LEFT(p.description, 200) AS description,
+            p.price, p.original_price AS originalPrice,
+            p.condition_level AS conditionLevel,
+            p.images, p.location, p.contact,
+            p.status, p.view_count AS viewCount, p.favorite_count AS favoriteCount,
+            p.create_time AS createTime, p.update_time AS updateTime,
+            u.id AS authorId, u.nickname AS authorNickname, u.avatar AS authorAvatar
+        FROM secondhand_product p
+        LEFT JOIN secondhand_category c ON p.category_id = c.id
+        LEFT JOIN sys_user u ON p.user_id = u.id
+        <where>
+            p.status = 0
+            <if test="categoryId != null">
+                AND p.category_id = #{categoryId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.title LIKE CONCAT('%', #{keyword}, '%')
+                     OR p.description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY p.create_time DESC
+    </select>
+
+    <select id="selectProductDetail" resultType="com.campus.vo.SecondhandProductVO">
+        SELECT
+            p.id, p.user_id AS userId, p.category_id AS categoryId,
+            c.name AS categoryName,
+            p.title, p.description,
+            p.price, p.original_price AS originalPrice,
+            p.condition_level AS conditionLevel,
+            p.images, p.location, p.contact,
+            p.status, p.view_count AS viewCount, p.favorite_count AS favoriteCount,
+            p.create_time AS createTime, p.update_time AS updateTime,
+            u.id AS authorId, u.nickname AS authorNickname, u.avatar AS authorAvatar
+        FROM secondhand_product p
+        LEFT JOIN secondhand_category c ON p.category_id = c.id
+        LEFT JOIN sys_user u ON p.user_id = u.id
+        WHERE p.id = #{productId}
+    </select>
+
+    <select id="selectMyProducts" resultType="com.campus.vo.SecondhandProductVO">
+        SELECT
+            p.id, p.user_id AS userId, p.category_id AS categoryId,
+            c.name AS categoryName,
+            p.title, LEFT(p.description, 200) AS description,
+            p.price, p.original_price AS originalPrice,
+            p.condition_level AS conditionLevel,
+            p.images, p.location, p.contact,
+            p.status, p.view_count AS viewCount, p.favorite_count AS favoriteCount,
+            p.create_time AS createTime, p.update_time AS updateTime,
+            u.id AS authorId, u.nickname AS authorNickname, u.avatar AS authorAvatar
+        FROM secondhand_product p
+        LEFT JOIN secondhand_category c ON p.category_id = c.id
+        LEFT JOIN sys_user u ON p.user_id = u.id
+        WHERE p.user_id = #{userId}
+        ORDER BY p.create_time DESC
+    </select>
+
+    <select id="selectMyFavorites" resultType="com.campus.vo.SecondhandProductVO">
+        SELECT
+            p.id, p.user_id AS userId, p.category_id AS categoryId,
+            c.name AS categoryName,
+            p.title, LEFT(p.description, 200) AS description,
+            p.price, p.original_price AS originalPrice,
+            p.condition_level AS conditionLevel,
+            p.images, p.location, p.contact,
+            p.status, p.view_count AS viewCount, p.favorite_count AS favoriteCount,
+            p.create_time AS createTime, p.update_time AS updateTime,
+            u.id AS authorId, u.nickname AS authorNickname, u.avatar AS authorAvatar
+        FROM secondhand_favorite f
+        INNER JOIN secondhand_product p ON f.product_id = p.id
+        LEFT JOIN secondhand_category c ON p.category_id = c.id
+        LEFT JOIN sys_user u ON p.user_id = u.id
+        WHERE f.user_id = #{userId}
+        ORDER BY f.create_time DESC
+    </select>
+
+</mapper>

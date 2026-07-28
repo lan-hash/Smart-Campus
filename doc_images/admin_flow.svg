@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" width="100%" height="auto">
+<defs>
+  <style>
+    .t { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; font-size: 13px; fill: #171717; }
+    .th { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; font-size: 14px; font-weight: 600; fill: #171717; }
+    .ts { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; font-size: 11px; fill: #52525B; }
+    .arr { stroke: #A1A1AA; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .box { rx: 8; }
+  </style>
+  <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+    <path d="M1 1 L7 4 L1 7 Z" fill="#A1A1AA"/>
+  </marker>
+</defs>
+
+<text x="360" y="30" text-anchor="middle" class="th" font-size="16">后台管理模块 · 管理链路</text>
+
+<!-- 管理员登录 -->
+<rect x="280" y="55" width="160" height="36" class="box" fill="#E5EAFF" stroke="#4B3FE3"/>
+<text x="360" y="78" text-anchor="middle" class="t" fill="#1A1759">管理员登录 (/admin/login)</text>
+
+<!-- 仪表盘 -->
+<rect x="280" y="115" width="160" height="36" class="box" fill="#F2F7FF" stroke="#4B3FE3"/>
+<text x="360" y="138" text-anchor="middle" class="t" fill="#1A1759">数据仪表盘</text>
+
+<line x1="360" y1="91" x2="360" y2="115" class="arr" marker-end="url(#arrow)"/>
+
+<!-- 四大管理分支 -->
+<rect x="40" y="180" width="140" height="50" class="box" fill="#FFFFFF" stroke="#4B3FE3"/>
+<text x="110" y="205" text-anchor="middle" class="t" fill="#1A1759">用户管理</text>
+<text x="110" y="220" text-anchor="middle" class="ts">启用/禁用账号</text>
+
+<rect x="210" y="180" width="140" height="50" class="box" fill="#FFFFFF" stroke="#4B3FE3"/>
+<text x="280" y="205" text-anchor="middle" class="t" fill="#1A1759">帖子管理</text>
+<text x="280" y="220" text-anchor="middle" class="ts">置顶/加精/删除</text>
+
+<rect x="380" y="180" width="140" height="50" class="box" fill="#FFFFFF" stroke="#4B3FE3"/>
+<text x="450" y="205" text-anchor="middle" class="t" fill="#1A1759">举报处理</text>
+<text x="450" y="220" text-anchor="middle" class="ts">忽略/警告/封禁</text>
+
+<rect x="550" y="180" width="140" height="50" class="box" fill="#FFFFFF" stroke="#4B3FE3"/>
+<text x="620" y="205" text-anchor="middle" class="t" fill="#1A1759">公告管理</text>
+<text x="620" y="220" text-anchor="middle" class="ts">发布/删除公告</text>
+
+<line x1="360" y1="151" x2="110" y2="180" class="arr" marker-end="url(#arrow)"/>
+<line x1="360" y1="151" x2="280" y2="180" class="arr" marker-end="url(#arrow)"/>
+<line x1="360" y1="151" x2="450" y2="180" class="arr" marker-end="url(#arrow)"/>
+<line x1="360" y1="151" x2="620" y2="180" class="arr" marker-end="url(#arrow)"/>
+
+<!-- 操作日志 -->
+<rect x="200" y="270" width="320" height="50" class="box" fill="#FEF3C7" stroke="#D97706"/>
+<text x="360" y="295" text-anchor="middle" class="t" fill="#78350F">操作日志记录</text>
+<text x="360" y="310" text-anchor="middle" class="ts">记录管理员所有操作，用于审计追踪</text>
+
+<line x1="110" y1="230" x2="280" y2="270" class="arr" marker-end="url(#arrow)"/>
+<line x1="280" y1="230" x2="320" y2="270" class="arr" marker-end="url(#arrow)"/>
+<line x1="450" y1="230" x2="400" y2="270" class="arr" marker-end="url(#arrow)"/>
+<line x1="620" y1="230" x2="440" y2="270" class="arr" marker-end="url(#arrow)"/>
+</svg>

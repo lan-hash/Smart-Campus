@@ -8,6 +8,17 @@ const service = axios.create({
   timeout: 15000
 })
 
+// 防止重复弹出相同错误提示
+let lastErrorMessage = ''
+let lastErrorTime = 0
+const showError = (msg) => {
+  const now = Date.now()
+  if (msg === lastErrorMessage && now - lastErrorTime < 3000) return
+  lastErrorMessage = msg
+  lastErrorTime = now
+  ElMessage.error(msg)
+}
+
 // 请求拦截器：附带 token
 service.interceptors.request.use(
   (config) => {
@@ -44,7 +55,7 @@ service.interceptors.response.use(
       })
       return Promise.reject(new Error(res.message || '未登录'))
     }
-    ElMessage.error(res.message || '请求失败')
+    showError(res.message || '请求失败')
     return Promise.reject(new Error(res.message || 'Error'))
   },
   (error) => {
@@ -54,11 +65,13 @@ service.interceptors.response.use(
       userStore.logout()
       router.push('/login')
     } else if (status === 403) {
-      ElMessage.error('没有权限访问该资源')
+      showError('没有权限访问该资源')
     } else if (status >= 500) {
-      ElMessage.error('服务器开小差了，请稍后重试')
+      showError('服务器开小差了，请稍后重试')
+    } else if (error.code === 'ECONNREFUSED' || !error.response) {
+      showError('服务器未启动，请检查后端服务')
     } else {
-      ElMessage.error(error.response?.data?.message || error.message || '网络异常')
+      showError(error.response?.data?.message || error.message || '网络异常')
     }
     return Promise.reject(error)
   }

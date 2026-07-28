@@ -22,6 +22,7 @@ public class ForumPostVO {
     private Integer collectCount;
     private Integer isTop;
     private Integer isEssence;
+    private Integer status;
     private String aiCategory;
     private LocalDateTime createTime;
 

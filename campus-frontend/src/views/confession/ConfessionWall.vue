@@ -312,7 +312,7 @@ const submit = async () => {
     await createConfession({
       content: form.content,
       images: JSON.stringify(form.images || []),
-      isAnonymous: form.isAnonymous
+      isAnonymous: form.isAnonymous ? 1 : 0
     })
     ElMessage.success('发布成功，愿你的心意被听见')
     dialogVisible.value = false

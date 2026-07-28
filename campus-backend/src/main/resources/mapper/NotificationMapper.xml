@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mapper.NotificationMapper">
+
+    <!-- 通知分页查询，LEFT JOIN sys_user 获取发送者昵称和头像 -->
+    <select id="selectNotificationPage" resultType="com.campus.vo.NotificationVO">
+        SELECT
+            n.id,
+            n.user_id AS userId,
+            n.type,
+            n.title,
+            n.content,
+            n.target_id AS targetId,
+            n.from_user_id AS fromUserId,
+            n.is_read AS isRead,
+            n.create_time AS createTime,
+            u.nickname AS fromUserNickname,
+            u.avatar AS fromUserAvatar
+        FROM notification n
+        LEFT JOIN sys_user u ON n.from_user_id = u.id
+        WHERE n.user_id = #{userId}
+        ORDER BY n.create_time DESC
+    </select>
+
+</mapper>

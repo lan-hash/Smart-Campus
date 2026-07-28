@@ -8,7 +8,7 @@ import com.campus.dto.CreatePostRequest;
 import com.campus.entity.*;
 import com.campus.mapper.*;
 import com.campus.service.ForumService;
-import com.campus.vo.ForumCategory;
+import com.campus.entity.ForumCategory;
 import com.campus.vo.ForumCommentVO;
 import com.campus.vo.ForumPostVO;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +59,9 @@ public class ForumServiceImpl implements ForumService {
     @Override
     @Transactional
     public void createPost(Long userId, CreatePostRequest request) {
+        if (userId == null) {
+            throw new BusinessException("请先登录");
+        }
         ForumPost post = new ForumPost();
         post.setUserId(userId);
         post.setCategoryId(request.getCategoryId());

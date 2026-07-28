@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" width="100%" height="auto">
+<defs>
+  <style>
+    .t { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; font-size: 13px; fill: #171717; }
+    .th { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; font-size: 14px; font-weight: 600; fill: #171717; }
+    .ts { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; font-size: 11px; fill: #52525B; }
+    .arr { stroke: #A1A1AA; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .box { rx: 8; }
+  </style>
+  <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+    <path d="M1 1 L7 4 L1 7 Z" fill="#A1A1AA"/>
+  </marker>
+</defs>
+
+<text x="360" y="30" text-anchor="middle" class="th" font-size="16">二手交易 · 商品与交易状态机</text>
+
+<text x="60" y="60" class="ts" font-weight="600" fill="#3C2ECA">商品状态</text>
+<text x="420" y="60" class="ts" font-weight="600" fill="#3C2ECA">交易状态</text>
+
+<!-- 商品状态 -->
+<rect x="60" y="80" width="120" height="40" class="box" fill="#E5EAFF" stroke="#4B3FE3"/>
+<text x="120" y="105" text-anchor="middle" class="t" fill="#1A1759">待售</text>
+
+<rect x="60" y="160" width="120" height="40" class="box" fill="#FEF3C7" stroke="#D97706"/>
+<text x="120" y="185" text-anchor="middle" class="t" fill="#78350F">已下架</text>
+
+<rect x="60" y="240" width="120" height="40" class="box" fill="#EAFBF8" stroke="#0D9488"/>
+<text x="120" y="265" text-anchor="middle" class="t" fill="#134E4A">已售</text>
+
+<line x1="120" y1="120" x2="120" y2="160" class="arr" marker-end="url(#arrow)"/>
+<line x1="120" y1="200" x2="120" y2="240" class="arr" marker-end="url(#arrow)"/>
+
+<!-- 交易状态 -->
+<rect x="420" y="80" width="120" height="40" class="box" fill="#E5EAFF" stroke="#4B3FE3"/>
+<text x="480" y="105" text-anchor="middle" class="t" fill="#1A1759">待确认</text>
+
+<rect x="420" y="160" width="120" height="40" class="box" fill="#FEF3C7" stroke="#D97706"/>
+<text x="480" y="185" text-anchor="middle" class="t" fill="#78350F">已取消</text>
+
+<rect x="420" y="240" width="120" height="40" class="box" fill="#EAFBF8" stroke="#0D9488"/>
+<text x="480" y="265" text-anchor="middle" class="t" fill="#134E4A">已完成</text>
+
+<line x1="480" y1="120" x2="480" y2="160" class="arr" marker-end="url(#arrow)"/>
+<line x1="480" y1="200" x2="480" y2="240" class="arr" marker-end="url(#arrow)"/>
+<line x1="540" y1="100" x2="580" y2="100" class="arr" marker-end="url(#arrow)"/>
+<text x="600" y="105" class="ts">卖家确认</text>
+
+<text x="160" y="145" class="ts">卖家下架</text>
+<text x="160" y="225" class="ts">交易完成</text>
+
+<!-- 买家发起购买 -->
+<rect x="250" y="170" width="100" height="36" class="box" fill="#F2F7FF" stroke="#4B3FE3"/>
+<text x="300" y="192" text-anchor="middle" class="t" fill="#1A1759">买家发起购买</text>
+<line x1="180" y1="100" x2="250" y2="188" class="arr" marker-end="url(#arrow)"/>
+<line x1="350" y1="188" x2="420" y2="100" class="arr" marker-end="url(#arrow)"/>
+</svg>

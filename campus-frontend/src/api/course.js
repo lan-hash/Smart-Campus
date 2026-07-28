@@ -10,7 +10,7 @@ export const getOrderDetail = (id) =>
 
 // 发布代课需求
 export const createOrder = (data) =>
-  request.post('/course/orders', data)
+  request.post('/course/create', data)
 
 // 接单
 export const acceptOrder = (id) =>

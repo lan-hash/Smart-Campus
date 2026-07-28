@@ -235,7 +235,8 @@ const fetchNotices = async () => {
   noticeLoading.value = true
   try {
     const data = await getNotices()
-    notices.value = Array.isArray(data) ? data.slice(0, 4) : []
+    const list = data?.records || data || []
+    notices.value = Array.isArray(list) ? list.slice(0, 4) : []
   } catch (e) {
     notices.value = []
   } finally {

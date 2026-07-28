@@ -13,7 +13,7 @@ export const getProductDetail = (id) =>
 
 // 发布商品
 export const createProduct = (data) =>
-  request.post('/secondhand/products', data)
+  request.post('/secondhand/publish', data)
 
 // 编辑商品
 export const updateProduct = (id, data) =>

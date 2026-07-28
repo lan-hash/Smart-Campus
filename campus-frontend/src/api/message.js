@@ -11,16 +11,16 @@ export const sendChatMessage = (userId, data) =>
 
 // ========== 通知 ==========
 export const getNotifications = (params) =>
-  request.get('/message/notification', { params })
+  request.get('/message/notifications', { params })
 
 export const markRead = (id) =>
-  request.put(`/message/notification/${id}/read`)
+  request.put(`/message/notifications/${id}/read`)
 
 export const markAllRead = () =>
-  request.put('/message/notification/read-all')
+  request.put('/message/notifications/read-all')
 
 export const getUnreadCount = () =>
-  request.get('/message/notification/unread-count')
+  request.get('/message/notifications/unread')
 
 // 系统公告
 export const getNotices = () => request.get('/message/notices')

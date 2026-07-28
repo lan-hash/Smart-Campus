@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mapper.ConfessionCommentMapper">
+
+    <!-- 查询某条表白的评论列表，LEFT JOIN sys_user获取评论者昵称和头像 -->
+    <select id="selectCommentsByConfessionId" resultType="com.campus.vo.ConfessionCommentVO">
+        SELECT
+            cc.id, cc.confession_id AS confessionId, cc.user_id AS userId,
+            cc.content, cc.create_time AS createTime,
+            u.nickname AS authorNickname, u.avatar AS authorAvatar
+        FROM confession_comment cc
+        LEFT JOIN sys_user u ON cc.user_id = u.id
+        WHERE cc.confession_id = #{confessionId}
+        ORDER BY cc.create_time ASC
+    </select>
+
+</mapper>

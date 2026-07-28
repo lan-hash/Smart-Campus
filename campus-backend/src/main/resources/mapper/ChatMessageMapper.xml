@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mapper.ChatMessageMapper">
+
+    <!-- 聊天记录查询，含双方昵称和头像，按时间正序 -->
+    <select id="selectChatHistory" resultType="com.campus.vo.ChatMessageVO">
+        SELECT
+            cm.id,
+            cm.from_user_id AS fromUserId,
+            cm.to_user_id AS toUserId,
+            cm.content,
+            cm.type,
+            cm.is_read AS isRead,
+            cm.create_time AS createTime,
+            fu.nickname AS fromUserNickname,
+            fu.avatar AS fromUserAvatar,
+            tu.nickname AS toUserNickname,
+            tu.avatar AS toUserAvatar
+        FROM chat_message cm
+        LEFT JOIN sys_user fu ON cm.from_user_id = fu.id
+        LEFT JOIN sys_user tu ON cm.to_user_id = tu.id
+        WHERE (cm.from_user_id = #{me} AND cm.to_user_id = #{other})
+           OR (cm.from_user_id = #{other} AND cm.to_user_id = #{me})
+        ORDER BY cm.create_time ASC
+    </select>
+
+</mapper>

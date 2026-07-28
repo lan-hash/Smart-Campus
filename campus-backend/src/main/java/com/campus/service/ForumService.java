@@ -3,7 +3,7 @@ package com.campus.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.dto.CreateCommentRequest;
 import com.campus.dto.CreatePostRequest;
-import com.campus.vo.ForumCategory;
+import com.campus.entity.ForumCategory;
 import com.campus.vo.ForumCommentVO;
 import com.campus.vo.ForumPostVO;
 

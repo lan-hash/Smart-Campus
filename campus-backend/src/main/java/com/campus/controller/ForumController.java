@@ -6,12 +6,13 @@ import com.campus.common.result.Result;
 import com.campus.dto.CreateCommentRequest;
 import com.campus.dto.CreatePostRequest;
 import com.campus.service.ForumService;
-import com.campus.vo.ForumCategory;
+import com.campus.entity.ForumCategory;
 import com.campus.vo.ForumCommentVO;
 import com.campus.vo.ForumPostVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.List;
 public class ForumController {
 
     private final ForumService forumService;
+    private final ChatClient chatClient;
 
     /** 获取版块列表 */
     @GetMapping("/categories")
@@ -49,7 +51,7 @@ public class ForumController {
     }
 
     /** 发帖 */
-    @PostMapping("/posts")
+    @PostMapping("/publish")
     public Result<Void> createPost(HttpServletRequest request,
                                    @RequestBody @Valid CreatePostRequest createPostRequest) {
         Long userId = (Long) request.getAttribute("userId");
@@ -152,5 +154,31 @@ public class ForumController {
         Long userId = (Long) request.getAttribute("userId");
         Page<ForumPostVO> result = forumService.getMyCollects(userId, page, size);
         return Result.success(PageResult.of(result));
+    }
+
+    /** AI 智能分类（发帖时预览推荐版块） */
+    @PostMapping("/ai/classify")
+    public Result<String> aiClassify(@RequestBody java.util.Map<String, String> body) {
+        String title = body.get("title");
+        String content = body.get("content");
+        if (title == null || title.isBlank()) {
+            return Result.success("");
+        }
+        // 查询所有版块名称供AI选择
+        List<ForumCategory> categories = forumService.getCategories(null);
+        StringBuilder catList = new StringBuilder();
+        for (ForumCategory c : categories) {
+            catList.append("- ").append(c.getName()).append("\n");
+        }
+        String prompt = "根据以下帖子标题和内容，从这些版块中选择最合适的一个，只回复版块名称，不要其他内容。\n"
+                + "可选版块：\n" + catList + "\n"
+                + "帖子标题：" + title + "\n"
+                + "帖子内容：" + (content != null ? content.substring(0, Math.min(content.length(), 200)) : "");
+        try {
+            String reply = chatClient.prompt(prompt).call().content();
+            return Result.success(reply != null ? reply.trim() : "");
+        } catch (Exception e) {
+            return Result.success("");
+        }
     }
 }

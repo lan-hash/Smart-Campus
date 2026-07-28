@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService {
     public UserVO login(LoginRequest request) {
         SysUser user = userMapper.selectByUsername(request.getUsername());
         if (user == null) {
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException("用户不存在");
         }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BusinessException("用户名或密码错误");

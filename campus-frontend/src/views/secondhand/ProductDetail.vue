@@ -92,18 +92,18 @@
 
             <!-- 卖家信息卡片 -->
             <div class="seller-card">
-              <el-avatar :size="48" :src="product.sellerAvatar">
-                {{ product.sellerName?.charAt(0) }}
+              <el-avatar :size="48" :src="product.authorAvatar">
+                {{ product.authorNickname?.charAt(0) }}
               </el-avatar>
               <div class="seller-info">
-                <div class="seller-name">{{ product.sellerName || '匿名卖家' }}</div>
+                <div class="seller-name">{{ product.authorNickname || '匿名卖家' }}</div>
                 <div class="seller-meta">
                   <el-rate
-                    :model-value="product.sellerScore || 5"
+                    :model-value="5"
                     disabled
                     size="small"
                   />
-                  <span class="seller-score">{{ (product.sellerScore || 5).toFixed(1) }} 分</span>
+                  <span class="seller-score">5.0 分</span>
                 </div>
               </div>
               <el-button text type="primary" @click="goSeller">
@@ -113,32 +113,44 @@
 
             <!-- 操作按钮 -->
             <div class="action-bar">
-              <el-button
-                size="large"
-                round
-                :type="isFavorited ? 'warning' : 'default'"
-                @click="handleFavorite"
-              >
-                <el-icon><Star v-if="!isFavorited" /><StarFilled v-else /></el-icon>
-                {{ isFavorited ? '已收藏' : '收藏' }}
-              </el-button>
-              <el-button size="large" round @click="contactSeller">
-                <el-icon><ChatDotRound /></el-icon>联系卖家
-              </el-button>
-              <el-button size="large" round @click="reportVisible = true">
-                <el-icon><Warning /></el-icon>举报
-              </el-button>
-              <el-button
-                size="large"
-                type="primary"
-                round
-                class="buy-btn"
-                :disabled="product.status !== 0 || isOwner"
-                @click="handleBuy"
-              >
-                <el-icon><ShoppingCart /></el-icon>
-                {{ isOwner ? '自己的商品' : (product.status === 0 ? '立即购买' : '已售出') }}
-              </el-button>
+              <!-- 自己的商品：显示编辑和删除 -->
+              <template v-if="isOwner">
+                <el-button size="large" round @click="goEdit">
+                  <el-icon><EditPen /></el-icon>编辑
+                </el-button>
+                <el-button size="large" round type="danger" @click="handleDelete">
+                  <el-icon><Delete /></el-icon>删除
+                </el-button>
+              </template>
+              <!-- 他人的商品：显示正常操作 -->
+              <template v-else>
+                <el-button
+                  size="large"
+                  round
+                  :type="isFavorited ? 'warning' : 'default'"
+                  @click="handleFavorite"
+                >
+                  <el-icon><Star v-if="!isFavorited" /><StarFilled v-else /></el-icon>
+                  {{ isFavorited ? '已收藏' : '收藏' }}
+                </el-button>
+                <el-button size="large" round @click="contactSeller">
+                  <el-icon><ChatDotRound /></el-icon>联系卖家
+                </el-button>
+                <el-button size="large" round @click="reportVisible = true">
+                  <el-icon><Warning /></el-icon>举报
+                </el-button>
+                <el-button
+                  size="large"
+                  type="primary"
+                  round
+                  class="buy-btn"
+                  :disabled="product.status !== 0"
+                  @click="handleBuy"
+                >
+                  <el-icon><ShoppingCart /></el-icon>
+                  {{ product.status === 0 ? '立即购买' : '已售出' }}
+                </el-button>
+              </template>
             </div>
           </div>
         </div>
@@ -198,7 +210,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Picture, View, Location, User, Star, StarFilled, ChatDotRound,
-  Warning, ShoppingCart, Document
+  Warning, ShoppingCart, Document, EditPen, Delete
 } from '@element-plus/icons-vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { useUserStore } from '@/stores/user'
@@ -230,7 +242,7 @@ const imageList = computed(() => {
 })
 
 const isOwner = computed(() =>
-  product.value && userStore.userId === product.value.sellerId
+  product.value && userStore.userId === product.value.authorId
 )
 
 const statusText = computed(() =>
@@ -295,13 +307,37 @@ const contactSeller = () => {
   }
   router.push({
     path: '/message',
-    query: { userId: product.value.sellerId, productId: product.value.id }
+    query: { userId: product.value.authorId, productId: product.value.id }
   })
 }
 
 const goSeller = () => {
-  if (product.value.sellerId) {
-    router.push(`/user/${product.value.sellerId}`)
+  if (product.value.authorId) {
+    router.push(`/user/${product.value.authorId}`)
+  }
+}
+
+const goEdit = () => {
+  router.push({ path: '/secondhand/publish', query: { id: product.value.id } })
+}
+
+const handleDelete = async () => {
+  try {
+    await ElMessageBox.confirm('确定要删除这个商品吗？', '删除确认', {
+      type: 'warning',
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消'
+    })
+  } catch {
+    return
+  }
+  try {
+    const { deleteProduct } = await import('@/api/secondhand')
+    await deleteProduct(product.value.id)
+    ElMessage.success('删除成功')
+    router.push('/secondhand')
+  } catch {
+    ElMessage.error('删除失败')
   }
 }
 

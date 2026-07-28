@@ -217,7 +217,7 @@ const rules = {
   categoryId: [{ required: true, message: '请选择版块', trigger: 'change' }],
   title: [
     { required: true, message: '请输入标题', trigger: 'blur' },
-    { min: 4, max: 50, message: '标题长度 4-50 个字符', trigger: 'blur' }
+    { min: 2, max: 50, message: '标题长度 2-50 个字符', trigger: 'blur' }
   ],
   content: [
     { required: true, message: '请输入正文内容', trigger: 'blur' },

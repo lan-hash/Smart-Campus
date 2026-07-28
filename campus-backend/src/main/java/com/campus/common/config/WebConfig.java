@@ -33,25 +33,19 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
-                // 拦截所有 /api 下的请求（前端通过 vite proxy 把 /api 代理到后端）
                 .addPathPatterns("/**")
-                // 排除不需要登录的接口
                 .excludePathPatterns(
                         "/user/login",
                         "/user/register",
                         "/forum/categories",
                         "/forum/posts",
-                        "/forum/posts/*",
-                        "/forum/posts/*/comments",
                         "/confession/list",
-                        "/confession/*/comments",
                         "/secondhand/categories",
                         "/secondhand/products",
                         "/course/orders",
                         "/message/notices",
                         "/upload/**",
                         "/admin/login",
-                        // 静态资源和 Swagger
                         "/favicon.ico",
                         "/error"
                 );

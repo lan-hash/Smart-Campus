@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mapper.CourseOrderMapper">
+
+    <!-- 分页查询订单列表，LEFT JOIN sys_user两次获取发布者和接单者信息 -->
+    <select id="selectOrderPage" resultType="com.campus.vo.CourseOrderVO">
+        SELECT
+            o.id, o.user_id AS userId, o.accept_user_id AS acceptUserId,
+            o.course_name AS courseName, o.course_type AS courseType,
+            o.class_time AS classTime, o.location,
+            o.salary, o.description, o.contact,
+            o.status, o.view_count AS viewCount,
+            o.create_time AS createTime, o.update_time AS updateTime,
+            u1.nickname AS publisherNickname, u1.avatar AS publisherAvatar,
+            u2.nickname AS acceptorNickname, u2.avatar AS acceptorAvatar
+        FROM course_order o
+        LEFT JOIN sys_user u1 ON o.user_id = u1.id
+        LEFT JOIN sys_user u2 ON o.accept_user_id = u2.id
+        <where>
+            <if test="status != null">
+                o.status = #{status}
+            </if>
+        </where>
+        ORDER BY
+            CASE WHEN o.status IN (0, 1) THEN 0 ELSE 1 END,
+            o.create_time DESC
+    </select>
+
+    <!-- 查询订单详情 -->
+    <select id="selectOrderDetail" resultType="com.campus.vo.CourseOrderVO">
+        SELECT
+            o.id, o.user_id AS userId, o.accept_user_id AS acceptUserId,
+            o.course_name AS courseName, o.course_type AS courseType,
+            o.class_time AS classTime, o.location,
+            o.salary, o.description, o.contact,
+            o.status, o.view_count AS viewCount,
+            o.create_time AS createTime, o.update_time AS updateTime,
+            u1.nickname AS publisherNickname, u1.avatar AS publisherAvatar,
+            u2.nickname AS acceptorNickname, u2.avatar AS acceptorAvatar
+        FROM course_order o
+        LEFT JOIN sys_user u1 ON o.user_id = u1.id
+        LEFT JOIN sys_user u2 ON o.accept_user_id = u2.id
+        WHERE o.id = #{orderId}
+    </select>
+
+    <!-- 查询我的订单（作为发布者或接单者） -->
+    <select id="selectMyOrderPage" resultType="com.campus.vo.CourseOrderVO">
+        SELECT
+            o.id, o.user_id AS userId, o.accept_user_id AS acceptUserId,
+            o.course_name AS courseName, o.course_type AS courseType,
+            o.class_time AS classTime, o.location,
+            o.salary, o.description, o.contact,
+            o.status, o.view_count AS viewCount,
+            o.create_time AS createTime, o.update_time AS updateTime,
+            u1.nickname AS publisherNickname, u1.avatar AS publisherAvatar,
+            u2.nickname AS acceptorNickname, u2.avatar AS acceptorAvatar
+        FROM course_order o
+        LEFT JOIN sys_user u1 ON o.user_id = u1.id
+        LEFT JOIN sys_user u2 ON o.accept_user_id = u2.id
+        WHERE o.user_id = #{userId} OR o.accept_user_id = #{userId}
+        ORDER BY o.create_time DESC
+    </select>
+
+</mapper>

@@ -11,7 +11,7 @@ export const getPosts = (params) => request.get('/forum/posts', { params })
 export const getPostDetail = (id) => request.get(`/forum/posts/${id}`)
 
 // 发帖
-export const createPost = (data) => request.post('/forum/posts', data)
+export const createPost = (data) => request.post('/forum/publish', data)
 
 // 编辑帖子
 export const updatePost = (id, data) => request.put(`/forum/posts/${id}`, data)

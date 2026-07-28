@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mapper.ReportMapper">
+
+    <select id="selectReportPage" resultType="com.campus.vo.ReportVO">
+        SELECT
+            r.id, r.reporter_id AS reporterId, r.target_type AS targetType,
+            r.target_id AS targetId, r.reason, r.description,
+            r.status, r.handler_id AS handlerId, r.handle_remark AS handleRemark,
+            r.create_time AS createTime, r.handle_time AS handleTime,
+            u1.nickname AS reporterNickname, u1.avatar AS reporterAvatar,
+            u2.nickname AS handlerNickname,
+            CASE r.target_type
+                WHEN 0 THEN (SELECT p.title FROM secondhand_product p WHERE p.id = r.target_id)
+                WHEN 1 THEN (SELECT p.title FROM forum_post p WHERE p.id = r.target_id)
+                WHEN 2 THEN (SELECT c.content FROM confession c WHERE c.id = r.target_id)
+                WHEN 3 THEN (SELECT o.course_name FROM course_order o WHERE o.id = r.target_id)
+                WHEN 4 THEN (SELECT u.nickname FROM sys_user u WHERE u.id = r.target_id)
+                ELSE NULL
+            END AS targetTitle
+        FROM report r
+        LEFT JOIN sys_user u1 ON r.reporter_id = u1.id
+        LEFT JOIN sys_user u2 ON r.handler_id = u2.id
+        <where>
+            <if test="status != null">
+                AND r.status = #{status}
+            </if>
+        </where>
+        ORDER BY r.create_time DESC
+    </select>
+
+</mapper>
