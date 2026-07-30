@@ -162,8 +162,8 @@ const handleCommand = (cmd) => {
     case 'logout':
       ElMessageBox.confirm('确定要退出登录吗？', '提示', {
         type: 'warning'
-      }).then(() => {
-        userStore.logout()
+      }).then(async () => {
+        await userStore.logout()
         ElMessage.success('已退出登录')
         router.push('/')
       }).catch(() => {})

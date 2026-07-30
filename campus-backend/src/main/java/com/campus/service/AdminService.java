@@ -4,18 +4,16 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.dto.HandleReportRequest;
 import com.campus.dto.LoginRequest;
 import com.campus.dto.PublishNoticeRequest;
+import com.campus.entity.OperationLog;
 import com.campus.entity.SystemNotice;
-import com.campus.vo.DashboardVO;
-import com.campus.vo.ForumPostVO;
-import com.campus.vo.ReportVO;
-import com.campus.vo.UserVO;
+import com.campus.vo.*;
 
 public interface AdminService {
 
     /**
      * 管理员登录
      */
-    UserVO login(LoginRequest request);
+    LoginResponseVO login(LoginRequest request);
 
     /**
      * 获取数据面板统计
@@ -73,7 +71,17 @@ public interface AdminService {
     void publishNotice(Long adminId, PublishNoticeRequest request);
 
     /**
+     * 更新公告
+     */
+    void updateNotice(Long noticeId, PublishNoticeRequest request);
+
+    /**
      * 删除公告
      */
     void deleteNotice(Long noticeId);
+
+    /**
+     * 获取操作日志列表
+     */
+    Page<OperationLog> getLogList(int page, int size, String keyword);
 }

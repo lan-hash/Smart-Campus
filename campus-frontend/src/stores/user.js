@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
-import { login as loginApi, getUserInfo } from '@/api/user'
+import { login as loginApi, getUserInfo, logout as logoutApi } from '@/api/user'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     token: localStorage.getItem('campus_token') || '',
+    refreshToken: localStorage.getItem('campus_refresh_token') || '',
     userInfo: JSON.parse(localStorage.getItem('campus_user') || 'null')
   }),
 
@@ -17,20 +18,31 @@ export const useUserStore = defineStore('user', {
     // 登录
     async login(loginForm) {
       const data = await loginApi(loginForm)
-      this.token = data.token
-      localStorage.setItem('campus_token', data.token)
-      this.userInfo = data
-      localStorage.setItem('campus_user', JSON.stringify(data))
+      // 后端返回结构: { accessToken, refreshToken, expiresIn, user: {...} }
+      this.token = data.accessToken
+      this.refreshToken = data.refreshToken || ''
+      this.userInfo = data.user
+      localStorage.setItem('campus_token', data.accessToken)
+      if (data.refreshToken) {
+        localStorage.setItem('campus_refresh_token', data.refreshToken)
+      }
+      localStorage.setItem('campus_user', JSON.stringify(data.user))
       return data
     },
 
     // 拉取最新用户信息
     async fetchUserInfo() {
       if (!this.token) return null
-      const data = await getUserInfo()
-      this.userInfo = data
-      localStorage.setItem('campus_user', JSON.stringify(data))
-      return data
+      try {
+        const data = await getUserInfo()
+        this.userInfo = data
+        localStorage.setItem('campus_user', JSON.stringify(data))
+        return data
+      } catch (e) {
+        // token 失效，清除登录状态
+        this.logout()
+        throw e
+      }
     },
 
     // 更新本地用户信息(编辑资料后)
@@ -40,10 +52,20 @@ export const useUserStore = defineStore('user', {
     },
 
     // 退出登录
-    logout() {
+    async logout() {
+      // 尝试调用后端退出接口（黑名单token），失败也不影响前端清除
+      try {
+        if (this.token) {
+          await logoutApi()
+        }
+      } catch (e) {
+        // 静默处理
+      }
       this.token = ''
+      this.refreshToken = ''
       this.userInfo = null
       localStorage.removeItem('campus_token')
+      localStorage.removeItem('campus_refresh_token')
       localStorage.removeItem('campus_user')
     }
   }

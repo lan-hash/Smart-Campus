@@ -4,14 +4,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.dto.LoginRequest;
 import com.campus.dto.RegisterRequest;
 import com.campus.dto.UpdateProfileRequest;
+import com.campus.vo.LoginResponseVO;
 import com.campus.vo.UserVO;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
 
-    UserVO login(LoginRequest request);
+    LoginResponseVO login(LoginRequest request);
 
-    void register(RegisterRequest request);
+    LoginResponseVO register(RegisterRequest request);
 
     UserVO getUserInfo(Long userId);
 
@@ -34,4 +35,8 @@ public interface UserService {
     Page<UserVO> getFollowingList(Long userId, int page, int size);
 
     Page<UserVO> getFansList(Long userId, int page, int size);
+
+    void logout(Long userId, String token);
+
+    LoginResponseVO refreshToken(String refreshToken);
 }

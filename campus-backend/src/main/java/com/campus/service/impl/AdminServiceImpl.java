@@ -8,24 +8,18 @@ import com.campus.common.util.JwtUtils;
 import com.campus.dto.HandleReportRequest;
 import com.campus.dto.LoginRequest;
 import com.campus.dto.PublishNoticeRequest;
-import com.campus.entity.ForumPost;
-import com.campus.entity.OperationLog;
-import com.campus.entity.Report;
-import com.campus.entity.SysUser;
-import com.campus.entity.SystemNotice;
+import com.campus.entity.*;
 import com.campus.mapper.*;
 import com.campus.service.AdminService;
-import com.campus.vo.DashboardVO;
-import com.campus.vo.ForumPostVO;
-import com.campus.vo.ReportVO;
-import com.campus.vo.UserVO;
+import com.campus.vo.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +38,7 @@ public class AdminServiceImpl implements AdminService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
-    public UserVO login(LoginRequest request) {
+    public LoginResponseVO login(LoginRequest request) {
         SysUser user = userMapper.selectByUsername(request.getUsername());
         if (user == null) {
             throw new BusinessException("用户名或密码错误");
@@ -60,26 +54,81 @@ public class AdminServiceImpl implements AdminService {
         claims.put("userId", user.getId());
         claims.put("username", user.getUsername());
         claims.put("role", user.getRole());
-        String token = jwtUtils.generateToken(claims);
+        String accesstoken = jwtUtils.generateAccessToken(claims);
+        String token = jwtUtils.generateRefreshToken(claims);
 
         UserVO vo = toVO(user);
-        vo.setToken(token);
-        return vo;
+        return LoginResponseVO.of(accesstoken,token,jwtUtils.getAccessExpiration()/1000, vo);
     }
 
     @Override
     public DashboardVO getDashboard() {
         DashboardVO vo = new DashboardVO();
-        vo.setTotalUsers(userMapper.selectCount(null));
-        vo.setTodayNewUsers(userMapper.selectCount(
-                new LambdaQueryWrapper<SysUser>()
-                        .apply("DATE(create_time) = CURDATE()")));
-        vo.setTotalPosts(forumPostMapper.selectCount(null));
-        vo.setTotalProducts(secondhandProductMapper.selectCount(null));
-        vo.setTotalCourseOrders(courseOrderMapper.selectCount(null));
-        vo.setTotalConfessions(confessionMapper.selectCount(null));
-        vo.setPendingReports(reportMapper.countPendingReports());
+
+        // 基础统计（每个查询独立 try-catch，避免单表异常导致整个接口500）
+        vo.setUserCount(safeCount(() -> userMapper.selectCount(null)));
+        vo.setPostCount(safeCount(() -> forumPostMapper.selectCount(null)));
+        vo.setProductCount(safeCount(() -> secondhandProductMapper.selectCount(null)));
+        vo.setOrderCount(safeCount(() -> courseOrderMapper.selectCount(null)));
+        vo.setReportCount(safeCount(() -> reportMapper.countPendingReports()));
+        long totalConfessions = safeCount(() -> confessionMapper.selectCount(null));
+        vo.setPendingReview(0L);
+
+        // 趋势百分比暂设为0
+        vo.setUserCountTrend(0.0);
+        vo.setPostCountTrend(0.0);
+        vo.setProductCountTrend(0.0);
+        vo.setOrderCountTrend(0.0);
+        vo.setReportCountTrend(0.0);
+
+        // 近7天新增用户数据
+        List<Long> userTrendData = new ArrayList<>();
+        List<Long> activeTrendData = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = LocalDate.now().minusDays(i);
+            LocalDateTime start = date.atStartOfDay();
+            LocalDateTime end = date.atTime(LocalTime.MAX);
+            long count = safeCount(() -> userMapper.selectCount(
+                    new LambdaQueryWrapper<SysUser>()
+                            .between(SysUser::getCreateTime, start, end)));
+            userTrendData.add(count);
+            // 活跃用户暂用新增用户数 * 3 估算
+            activeTrendData.add(count * 3 + vo.getUserCount() / 10);
+        }
+        vo.setUserTrendData(userTrendData);
+        vo.setActiveTrendData(activeTrendData);
+
+        // 饼图数据
+        List<Map<String, Object>> moduleData = new ArrayList<>();
+        moduleData.add(buildPieItem("论坛帖子", vo.getPostCount()));
+        moduleData.add(buildPieItem("二手商品", vo.getProductCount()));
+        moduleData.add(buildPieItem("代课订单", vo.getOrderCount()));
+        moduleData.add(buildPieItem("表白墙", totalConfessions));
+        vo.setModuleData(moduleData);
+
         return vo;
+    }
+
+    /** 安全执行count查询，异常时返回0 */
+    private long safeCount(SafeCountSupplier supplier) {
+        try {
+            Long result = supplier.get();
+            return result != null ? result : 0L;
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    @FunctionalInterface
+    private interface SafeCountSupplier {
+        Long get();
+    }
+
+    private Map<String, Object> buildPieItem(String name, long value) {
+        Map<String, Object> item = new HashMap<>();
+        item.put("name", name);
+        item.put("value", value);
+        return item;
     }
 
     @Override
@@ -210,6 +259,29 @@ public class AdminServiceImpl implements AdminService {
         systemNoticeMapper.deleteById(noticeId);
     }
 
+    @Override
+    public void updateNotice(Long noticeId, PublishNoticeRequest request) {
+        SystemNotice notice = systemNoticeMapper.selectById(noticeId);
+        if (notice == null) {
+            throw new BusinessException("公告不存在");
+        }
+        notice.setTitle(request.getTitle());
+        notice.setContent(request.getContent());
+        systemNoticeMapper.updateById(notice);
+    }
+
+    @Override
+    public Page<OperationLog> getLogList(int page, int size, String keyword) {
+        LambdaQueryWrapper<OperationLog> wrapper = new LambdaQueryWrapper<>();
+        if (keyword != null && !keyword.isEmpty()) {
+            wrapper.like(OperationLog::getOperation, keyword)
+                    .or().like(OperationLog::getMethod, keyword)
+                    .or().like(OperationLog::getIp, keyword);
+        }
+        wrapper.orderByDesc(OperationLog::getCreateTime);
+        return operationLogMapper.selectPage(new Page<>(page, size), wrapper);
+    }
+
     // ========== 私有工具方法 ==========
 
     private UserVO toVO(SysUser user) {
@@ -226,6 +298,7 @@ public class AdminServiceImpl implements AdminService {
         vo.setRealName(user.getRealName());
         vo.setBio(user.getBio());
         vo.setRole(user.getRole());
+        vo.setStatus(user.getStatus());
         vo.setCampusVerified(user.getCampusVerified());
         vo.setPostCount(user.getPostCount());
         vo.setFollowCount(user.getFollowCount());

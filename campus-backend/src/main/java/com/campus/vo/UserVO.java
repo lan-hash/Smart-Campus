@@ -22,6 +22,8 @@ public class UserVO {
     private String bio;
     /** 角色 0学生 1管理员 */
     private Integer role;
+    /** 状态 0正常 1封禁 */
+    private Integer status;
     /** 校园认证状态 */
     private Integer campusVerified;
     private Integer postCount;

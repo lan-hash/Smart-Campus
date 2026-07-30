@@ -42,7 +42,8 @@ mybatis-plus:
 
 jwt:
   secret: ${JWT_SECRET:change-this-to-a-long-random-string}
-  expiration: 604800000
+  access-expiration: 7200000
+  refresh-expiration: 604800000
 
 aliyun:
   oss:

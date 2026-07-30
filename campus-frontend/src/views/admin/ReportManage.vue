@@ -13,13 +13,6 @@
           <el-option label="已通过" :value="1" />
           <el-option label="已驳回" :value="2" />
         </el-select>
-        <el-select v-model="typeFilter" placeholder="类型筛选" style="width: 140px" @change="handleSearch">
-          <el-option label="全部类型" value="" />
-          <el-option label="帖子" value="post" />
-          <el-option label="表白" value="confession" />
-          <el-option label="商品" value="product" />
-          <el-option label="代课" value="course" />
-        </el-select>
       </div>
     </div>
 
@@ -29,8 +22,8 @@
         <el-table-column label="举报人" width="160">
           <template #default="{ row }">
             <div class="reporter-cell">
-              <el-avatar :size="30" :src="row.reporterAvatar">{{ row.reporterName?.charAt(0) }}</el-avatar>
-              <span>{{ row.reporterName || '匿名' }}</span>
+              <el-avatar :size="30" :src="row.reporterAvatar">{{ (row.reporterNickname || '匿')?.charAt(0) }}</el-avatar>
+              <span>{{ row.reporterNickname || '匿名' }}</span>
             </div>
           </template>
         </el-table-column>
@@ -131,7 +124,6 @@ import { Edit } from '@element-plus/icons-vue'
 import { getReports, handleReport } from '@/api/admin'
 
 const statusFilter = ref('')
-const typeFilter = ref('')
 const reports = ref([])
 const loading = ref(false)
 const page = ref(1)
@@ -151,12 +143,13 @@ const formatTime = (t) => {
 const statusText = (s) => ['待处理', '已通过', '已驳回'][s] || '待处理'
 const statusTagType = (s) => ['warning', 'success', 'info'][s] || 'warning'
 
+// targetType: 0=商品 1=帖子 2=表白 3=代课 4=用户
 const targetText = (t) => ({
-  post: '帖子', confession: '表白', product: '商品', course: '代课', comment: '评论'
-}[t] || t || '其他')
+  0: '商品', 1: '帖子', 2: '表白', 3: '代课', 4: '用户'
+}[t] || '其他')
 
 const targetTagType = (t) => ({
-  post: 'primary', confession: 'danger', product: 'warning', course: 'success', comment: 'info'
+  0: 'warning', 1: 'primary', 2: 'danger', 3: 'success', 4: 'info'
 }[t] || 'info')
 
 const loadReports = async () => {
@@ -164,7 +157,6 @@ const loadReports = async () => {
   try {
     const params = { page: page.value, size: size.value }
     if (statusFilter.value !== '') params.status = statusFilter.value
-    if (typeFilter.value) params.targetType = typeFilter.value
     const data = await getReports(params)
     reports.value = data.records || []
     total.value = data.total || 0

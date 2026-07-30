@@ -4,99 +4,92 @@
     <div class="page-toolbar">
       <div class="toolbar-left">
         <h2 class="page-title">内容审核</h2>
-        <span class="page-desc">对用户发布的内容进行人工审核，可参考 AI 审核结果</span>
+        <span class="page-desc">对论坛帖子进行审核管理，可标记违规、置顶、加精</span>
       </div>
-    </div>
-
-    <!-- Tab 切换 -->
-    <el-tabs v-model="activeTab" class="review-tabs" @tab-change="handleTabChange">
-      <el-tab-pane label="帖子审核" name="post">
-        <el-icon><Document /></el-icon>
-      </el-tab-pane>
-      <el-tab-pane label="表白审核" name="confession">
-        <el-icon><ChatLineSquare /></el-icon>
-      </el-tab-pane>
-      <el-tab-pane label="商品审核" name="product">
-        <el-icon><ShoppingCart /></el-icon>
-      </el-tab-pane>
-    </el-tabs>
-
-    <!-- 筛选 -->
-    <div class="filter-row">
-      <el-radio-group v-model="statusFilter" @change="handleSearch">
-        <el-radio-button value="">全部</el-radio-button>
-        <el-radio-button value="0">待审核</el-radio-button>
-        <el-radio-button value="1">已通过</el-radio-button>
-        <el-radio-button value="2">已驳回</el-radio-button>
-      </el-radio-group>
-      <el-input
-        v-model="keyword"
-        placeholder="搜索内容关键词"
-        clearable
-        style="width: 240px"
-        @keyup.enter="handleSearch"
-      >
-        <template #prefix>
-          <el-icon><Search /></el-icon>
-        </template>
-      </el-input>
+      <div class="toolbar-right">
+        <el-radio-group v-model="statusFilter" @change="handleSearch">
+          <el-radio-button value="">全部</el-radio-button>
+          <el-radio-button :value="0">正常</el-radio-button>
+          <el-radio-button :value="1">违规</el-radio-button>
+        </el-radio-group>
+        <el-input
+          v-model="keyword"
+          placeholder="搜索标题/内容"
+          clearable
+          style="width: 240px"
+          @keyup.enter="handleSearch"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+      </div>
     </div>
 
     <!-- 列表 -->
     <div class="table-card">
       <el-table :data="list" v-loading="loading" stripe style="width: 100%">
-        <el-table-column label="内容" min-width="320">
+        <el-table-column label="帖子内容" min-width="320">
           <template #default="{ row }">
             <div class="content-cell">
               <div class="content-title">{{ row.title || '无标题' }}</div>
-              <div class="content-text">{{ row.content || row.description || '-' }}</div>
+              <div class="content-text">{{ row.content || '-' }}</div>
+              <div class="content-tags">
+                <el-tag v-if="row.isTop === 1" type="danger" size="small" effect="dark">置顶</el-tag>
+                <el-tag v-if="row.isEssence === 1" type="warning" size="small" effect="dark">精华</el-tag>
+              </div>
             </div>
           </template>
         </el-table-column>
         <el-table-column label="发布者" width="150">
           <template #default="{ row }">
             <div class="publisher-cell">
-              <el-avatar :size="28" :src="row.userAvatar">{{ row.userName?.charAt(0) }}</el-avatar>
-              <span>{{ row.userName || '匿名' }}</span>
+              <el-avatar :size="28" :src="row.authorAvatar">{{ (row.authorNickname || '匿')?.charAt(0) }}</el-avatar>
+              <span>{{ row.authorNickname || '匿名' }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="AI 审核" width="120" align="center">
+        <el-table-column label="浏览" prop="viewCount" width="70" align="center" />
+        <el-table-column label="点赞" prop="likeCount" width="70" align="center" />
+        <el-table-column label="评论" prop="commentCount" width="70" align="center" />
+        <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
-            <el-tag
-              v-if="row.aiReview !== undefined && row.aiReview !== null"
-              :type="aiTagType(row.aiReview)"
-              effect="dark"
-              size="small"
-            >
-              {{ aiTagText(row.aiReview) }}
-            </el-tag>
-            <span v-else class="text-muted">未审核</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="statusTagType(row.status)" effect="plain">
-              {{ statusText(row.status) }}
+            <el-tag :type="row.status === 0 ? 'success' : 'danger'" effect="plain">
+              {{ row.status === 0 ? '正常' : '违规' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="提交时间" width="170">
+        <el-table-column prop="createTime" label="发布时间" width="170">
           <template #default="{ row }">
             {{ formatTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right" align="center">
+        <el-table-column label="操作" width="240" fixed="right" align="center">
           <template #default="{ row }">
-            <template v-if="row.status === 0">
-              <el-button type="success" size="small" plain @click="handleReview(row, 1)">
-                <el-icon><Select /></el-icon>通过
-              </el-button>
-              <el-button type="danger" size="small" plain @click="handleReview(row, 2)">
-                <el-icon><CloseBold /></el-icon>驳回
-              </el-button>
-            </template>
-            <span v-else class="text-muted">已处理</span>
+            <el-button
+              :type="row.status === 0 ? 'danger' : 'success'"
+              size="small"
+              plain
+              @click="handleStatus(row)"
+            >
+              {{ row.status === 0 ? '标记违规' : '恢复正常' }}
+            </el-button>
+            <el-button
+              :type="row.isTop === 1 ? 'warning' : 'primary'"
+              size="small"
+              plain
+              @click="handleTop(row)"
+            >
+              {{ row.isTop === 1 ? '取消置顶' : '置顶' }}
+            </el-button>
+            <el-button
+              :type="row.isEssence === 1 ? 'warning' : 'primary'"
+              size="small"
+              plain
+              @click="handleEssence(row)"
+            >
+              {{ row.isEssence === 1 ? '取消加精' : '加精' }}
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -115,44 +108,15 @@
         />
       </div>
     </div>
-
-    <!-- 审核对话框 -->
-    <el-dialog v-model="reviewVisible" :title="`${reviewAction === 1 ? '通过' : '驳回'}审核`" width="460px">
-      <el-form :model="reviewForm" label-width="80px">
-        <el-form-item label="审核结果">
-          <el-tag :type="reviewAction === 1 ? 'success' : 'danger'" effect="dark">
-            {{ reviewAction === 1 ? '通过' : '驳回' }}
-          </el-tag>
-        </el-form-item>
-        <el-form-item label="审核备注">
-          <el-input
-            v-model="reviewForm.remark"
-            type="textarea"
-            :rows="3"
-            placeholder="请填写审核备注（可选）"
-            maxlength="200"
-            show-word-limit
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="reviewVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitReview">确认</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import {
-  Search, Document, ChatLineSquare, ShoppingCart,
-  Select, CloseBold
-} from '@element-plus/icons-vue'
-import { getReviewList, reviewItem } from '@/api/admin'
+import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search } from '@element-plus/icons-vue'
+import { getPosts, updatePostStatus, updatePostTop, updatePostEssence } from '@/api/admin'
 
-const activeTab = ref('post')
 const statusFilter = ref('')
 const keyword = ref('')
 const list = ref([])
@@ -161,33 +125,18 @@ const page = ref(1)
 const size = ref(10)
 const total = ref(0)
 
-const reviewVisible = ref(false)
-const submitting = ref(false)
-const reviewAction = ref(1)
-const reviewForm = reactive({ remark: '' })
-const currentRow = ref(null)
-
 const formatTime = (t) => {
   if (!t) return '-'
   return new Date(t).toLocaleString('zh-CN')
 }
 
-const statusText = (s) => ['待审核', '已通过', '已驳回'][s] || '待审核'
-const statusTagType = (s) => ['warning', 'success', 'danger'][s] || 'warning'
-const aiTagText = (a) => ['待审', '通过', '违规'][a] || '未知'
-const aiTagType = (a) => ['info', 'success', 'danger'][a] || 'info'
-
 const loadList = async () => {
   loading.value = true
   try {
-    const params = {
-      type: activeTab.value,
-      page: page.value,
-      size: size.value
-    }
+    const params = { page: page.value, size: size.value }
     if (statusFilter.value !== '') params.status = statusFilter.value
     if (keyword.value.trim()) params.keyword = keyword.value.trim()
-    const data = await getReviewList(params)
+    const data = await getPosts(params)
     list.value = data.records || []
     total.value = data.total || 0
   } catch {
@@ -198,38 +147,42 @@ const loadList = async () => {
   }
 }
 
-const handleTabChange = () => {
-  page.value = 1
-  loadList()
-}
-
 const handleSearch = () => {
   page.value = 1
   loadList()
 }
 
-const handleReview = (row, action) => {
-  currentRow.value = row
-  reviewAction.value = action
-  reviewForm.remark = ''
-  reviewVisible.value = true
+const handleStatus = async (row) => {
+  const newStatus = row.status === 0 ? 1 : 0
+  const action = newStatus === 1 ? '标记违规' : '恢复正常'
+  try {
+    await ElMessageBox.confirm(`确认${action}帖子「${row.title}」吗？`, '确认', { type: 'warning' })
+  } catch {
+    return
+  }
+  try {
+    await updatePostStatus(row.id, newStatus)
+    ElMessage.success(`${action}成功`)
+    loadList()
+  } catch { /* 拦截器已处理 */ }
 }
 
-const submitReview = async () => {
-  submitting.value = true
+const handleTop = async (row) => {
+  const newVal = row.isTop === 1 ? 0 : 1
   try {
-    await reviewItem(currentRow.value.id, {
-      status: reviewAction.value,
-      remark: reviewForm.remark
-    })
-    ElMessage.success(reviewAction.value === 1 ? '已通过审核' : '已驳回')
-    reviewVisible.value = false
+    await updatePostTop(row.id, newVal)
+    ElMessage.success(newVal === 1 ? '置顶成功' : '取消置顶成功')
     loadList()
-  } catch {
-    /* 拦截器已处理 */
-  } finally {
-    submitting.value = false
-  }
+  } catch { /* 拦截器已处理 */ }
+}
+
+const handleEssence = async (row) => {
+  const newVal = row.isEssence === 1 ? 0 : 1
+  try {
+    await updatePostEssence(row.id, newVal)
+    ElMessage.success(newVal === 1 ? '加精成功' : '取消加精成功')
+    loadList()
+  } catch { /* 拦截器已处理 */ }
 }
 
 onMounted(loadList)
@@ -241,6 +194,11 @@ onMounted(loadList)
 }
 
 .page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
   margin-bottom: 20px;
 }
 
@@ -256,15 +214,10 @@ onMounted(loadList)
   margin-left: 10px;
 }
 
-.review-tabs {
-  margin-bottom: 16px;
-}
-
-.filter-row {
+.toolbar-right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 10px;
 }
 
 .table-card {
@@ -295,17 +248,18 @@ onMounted(loadList)
   overflow: hidden;
 }
 
+.content-tags {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
 .publisher-cell {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
   color: var(--text-regular);
-}
-
-.text-muted {
-  color: var(--text-secondary);
-  font-size: 12px;
 }
 
 .pagination-wrap {

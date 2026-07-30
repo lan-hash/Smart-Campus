@@ -2,6 +2,7 @@ package com.campus.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.common.constant.RedisConstant;
 import com.campus.common.exception.BusinessException;
 import com.campus.common.util.JwtUtils;
 import com.campus.dto.LoginRequest;
@@ -10,11 +11,14 @@ import com.campus.dto.UpdateProfileRequest;
 import com.campus.entity.SysUser;
 import com.campus.mapper.UserMapper;
 import com.campus.service.UserService;
+import com.campus.vo.LoginResponseVO;
 import com.campus.vo.UserVO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,51 +28,78 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final JwtUtils jwtUtils;
+    private final PasswordEncoder passwordEncoder;
+    private final RedisConstant redisConstant;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${upload.path:./uploads/}")
     private String uploadPath;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
-    public UserVO login(LoginRequest request) {
-        SysUser user = userMapper.selectByUsername(request.getUsername());
-        if (user == null) {
-            throw new BusinessException("用户不存在");
-        }
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BusinessException("用户名或密码错误");
-        }
-        if (user.getStatus() == 1) {
-            throw new BusinessException("账号已被禁用，请联系管理员");
-        }
+    public LoginResponseVO login(LoginRequest request) {
+        String username = request.getUsername().trim();
+        String failKey = redisConstant.FAIL_PREFIX + username;
+        String lockKey = redisConstant.LOCK_PREFIX + username;
 
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(lockKey))){
+            Long ttl = redisTemplate.getExpire(lockKey, TimeUnit.SECONDS);
+            throw new BusinessException("用户名已锁定，请" + ttl + "秒后重试");
+        }
+        SysUser user = userMapper.selectByUsername(username);
+        boolean passwordMatch = user != null && passwordEncoder.matches(request.getPassword(), user.getPassword());
+        if (user == null || !passwordMatch){
+            Long failCount = redisTemplate.opsForValue().increment(failKey);
+            if (failCount != null && failCount == 1){
+                redisTemplate.expire(failKey, redisConstant.LOCK_DURATION, TimeUnit.MILLISECONDS);
+            }
+            if (failCount >= redisConstant.MAX_FAIL_COUNT){
+                redisTemplate.opsForValue().set(lockKey, "1", redisConstant.LOCK_DURATION, TimeUnit.MILLISECONDS);
+                redisTemplate.delete(failKey);
+                log.warn("用户{}登录失败次数超限，账号锁定15分钟", username);
+                throw new BusinessException("密码错误次数过多，账号已被锁定15分钟");
+            }
+            int remaining = redisConstant.MAX_FAIL_COUNT - failCount.intValue();
+            throw new BusinessException("用户名或密码错误，还剩" + remaining + "次尝试机会");
+        }
+        if (user.getStatus() == 1){
+            throw new BusinessException("用户已被禁用");
+        }
+        redisTemplate.delete(failKey);
+        redisTemplate.delete(lockKey);
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
-        claims.put("username", user.getUsername());
         claims.put("role", user.getRole());
-        String token = jwtUtils.generateToken(claims);
 
+        String accessToken = jwtUtils.generateAccessToken(claims);
+        String refreshToken = jwtUtils.generateRefreshToken(claims);
         UserVO vo = toVO(user);
-        vo.setToken(token);
-        return vo;
+        return LoginResponseVO.of(
+                accessToken,
+                refreshToken,
+                jwtUtils.getAccessExpiration()/1000,
+                vo
+        );
     }
 
     @Override
-    public void register(RegisterRequest request) {
+    public LoginResponseVO register(RegisterRequest request) {
+        String username = request.getUsername().trim();
         SysUser existing = userMapper.selectByUsername(request.getUsername());
         if (existing != null) {
             throw new BusinessException("用户名已存在");
         }
         SysUser user = new SysUser();
-        user.setUsername(request.getUsername());
+        user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setNickname(request.getNickname());
         user.setCampus(request.getCampus());
@@ -81,6 +112,19 @@ public class UserServiceImpl implements UserService {
         user.setFansCount(0);
         user.setAvatar("/default-avatar.svg");
         userMapper.insert(user);
+        log.info("用户{}注册成功,userId:{}", username, user.getId());
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("role", user.getRole());
+        String accessToken = jwtUtils.generateAccessToken(claims);
+        String refreshToken = jwtUtils.generateRefreshToken(claims);
+        UserVO vo = toVO(user);
+        return LoginResponseVO.of(
+                accessToken,
+                refreshToken,
+                jwtUtils.getAccessExpiration()/1000,
+                vo
+        );
     }
 
     @Override
@@ -236,6 +280,37 @@ public class UserServiceImpl implements UserService {
         return result;
     }
 
+    @Override
+    public void logout(Long userId, String token) {
+        jwtUtils.blacklistToken(token);
+        redisTemplate.delete(redisConstant.REFRESH_TOKEN_PREFIX + userId);
+        log.info("用户{}退出登录", userId);
+    }
+
+    @Override
+    public LoginResponseVO refreshToken(String refreshToken) {
+        if (!jwtUtils.validateRefreshToken(refreshToken)){
+            throw new BusinessException("refreshToken 无效,请重新登录");
+        }
+        Long userId = jwtUtils.getUserId(refreshToken);
+        SysUser user = userMapper.selectById(userId);
+        if (user == null){
+            throw new BusinessException("用户不存在");
+        }
+        if (user.getStatus() == 1){
+            throw new BusinessException("用户被禁用");
+        }
+        redisTemplate.delete(redisConstant.REFRESH_TOKEN_PREFIX + userId);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("role", user.getRole());
+
+        String newAccessToken = jwtUtils.generateAccessToken(claims);
+        String newRefreshToken = jwtUtils.generateRefreshToken(claims);
+        UserVO vo = toVO(user);
+        return LoginResponseVO.of(newAccessToken, newRefreshToken, jwtUtils.getAccessExpiration()/1000, vo);
+    }
+
     private UserVO toVO(SysUser user) {
         UserVO vo = new UserVO();
         vo.setId(user.getId());
@@ -250,6 +325,7 @@ public class UserServiceImpl implements UserService {
         vo.setRealName(user.getRealName());
         vo.setBio(user.getBio());
         vo.setRole(user.getRole());
+        vo.setStatus(user.getStatus());
         vo.setCampusVerified(user.getCampusVerified());
         vo.setPostCount(user.getPostCount());
         vo.setFollowCount(user.getFollowCount());

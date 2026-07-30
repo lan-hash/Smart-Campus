@@ -43,7 +43,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="school" label="学校" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="campus" label="学校" min-width="140" show-overflow-tooltip />
         <el-table-column label="角色" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="row.role === 1 ? 'danger' : 'primary'" effect="plain">

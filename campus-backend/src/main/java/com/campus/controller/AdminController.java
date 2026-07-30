@@ -10,10 +10,7 @@ import com.campus.entity.OperationLog;
 import com.campus.entity.SystemNotice;
 import com.campus.mapper.OperationLogMapper;
 import com.campus.service.AdminService;
-import com.campus.vo.DashboardVO;
-import com.campus.vo.ForumPostVO;
-import com.campus.vo.ReportVO;
-import com.campus.vo.UserVO;
+import com.campus.vo.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +30,8 @@ public class AdminController {
      * 管理员登录
      */
     @PostMapping("/login")
-    public Result<UserVO> login(@RequestBody @Valid LoginRequest request) {
-        UserVO vo = adminService.login(request);
+    public Result<LoginResponseVO> login(@RequestBody @Valid LoginRequest request) {
+        LoginResponseVO vo = adminService.login(request);
         return Result.success(vo);
     }
 
@@ -184,6 +181,31 @@ public class AdminController {
         adminService.deleteNotice(id);
         saveLog(adminId, "删除公告", "DELETE", "/admin/notices/" + id, request);
         return Result.success();
+    }
+
+    /**
+     * 更新公告
+     */
+    @PutMapping("/notices/{id}")
+    public Result<Void> updateNotice(HttpServletRequest request,
+                                      @PathVariable Long id,
+                                      @RequestBody @Valid PublishNoticeRequest noticeRequest) {
+        Long adminId = (Long) request.getAttribute("userId");
+        adminService.updateNotice(id, noticeRequest);
+        saveLog(adminId, "更新公告", "PUT", "/admin/notices/" + id, request);
+        return Result.success();
+    }
+
+    /**
+     * 操作日志列表
+     */
+    @GetMapping("/logs")
+    public Result<PageResult<OperationLog>> getLogList(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword) {
+        Page<OperationLog> result = adminService.getLogList(page, size, keyword);
+        return Result.success(PageResult.of(result));
     }
 
     // ========== 操作日志记录 ==========

@@ -65,7 +65,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             token = token.substring(7);
         }
 
-        if (token == null || !jwtUtils.validateToken(token)) {
+        if (token == null || !jwtUtils.validateAccessToken(token)) {
             response.setStatus(401);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write(objectMapper.writeValueAsString(Result.error(401, "未登录或登录已过期")));

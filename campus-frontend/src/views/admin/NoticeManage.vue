@@ -25,18 +25,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="content" label="公告内容" min-width="320" show-overflow-tooltip />
-        <el-table-column label="状态" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" effect="dark">
-              {{ row.status === 1 ? '已发布' : '草稿' }}
-            </el-tag>
-          </template>
-        </el-table-column>
         <el-table-column label="发布人" width="140">
           <template #default="{ row }">
             <div class="publisher-cell">
-              <el-avatar :size="26" :src="row.publisherAvatar">{{ row.publisherName?.charAt(0) }}</el-avatar>
-              <span>{{ row.publisherName || '管理员' }}</span>
+              <el-avatar :size="26">{{ '管理员'?.charAt(0) }}</el-avatar>
+              <span>管理员</span>
             </div>
           </template>
         </el-table-column>
@@ -109,10 +102,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Bell, Edit, Delete } from '@element-plus/icons-vue'
-import { createNotice } from '@/api/admin'
+import { getNotices, createNotice, updateNotice, deleteNotice } from '@/api/admin'
 
 const notices = ref([])
 const loading = ref(false)
@@ -146,12 +139,7 @@ const formatTime = (t) => {
 const loadNotices = async () => {
   loading.value = true
   try {
-    // 复用 createNotice 不存在列表接口时本地维护
-    // 此处通过通用 request 获取，若接口未提供则保持空列表
-    const { default: request } = await import('@/utils/request')
-    const data = await request.get('/admin/notice', {
-      params: { page: page.value, size: size.value }
-    })
+    const data = await getNotices({ page: page.value, size: size.value })
     notices.value = data.records || []
     total.value = data.total || 0
   } catch {
@@ -184,12 +172,13 @@ const submitForm = () => {
     if (!valid) return
     submitting.value = true
     try {
-      await createNotice({
-        title: form.title,
-        content: form.content,
-        id: isEdit.value ? editId.value : undefined
-      })
-      ElMessage.success(isEdit.value ? '修改成功' : '发布成功')
+      if (isEdit.value) {
+        await updateNotice(editId.value, { title: form.title, content: form.content })
+        ElMessage.success('修改成功')
+      } else {
+        await createNotice({ title: form.title, content: form.content })
+        ElMessage.success('发布成功')
+      }
       dialogVisible.value = false
       loadNotices()
     } catch {
@@ -211,8 +200,7 @@ const handleDelete = async (row) => {
     return
   }
   try {
-    const { default: request } = await import('@/utils/request')
-    await request.delete(`/admin/notice/${row.id}`)
+    await deleteNotice(row.id)
     ElMessage.success('删除成功')
     loadNotices()
   } catch {

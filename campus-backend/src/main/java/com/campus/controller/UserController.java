@@ -11,6 +11,7 @@ import com.campus.dto.UpdateProfileRequest;
 import com.campus.entity.SysUser;
 import com.campus.mapper.UserMapper;
 import com.campus.service.UserService;
+import com.campus.vo.LoginResponseVO;
 import com.campus.vo.UserVO;
 import com.aliyun.oss.OSS;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,15 +38,15 @@ public class UserController {
     private final OssConfig ossConfig;
 
     @PostMapping("/login")
-    public Result<UserVO> login(@RequestBody @Valid LoginRequest request) {
-        UserVO vo = userService.login(request);
+    public Result<LoginResponseVO> login(@RequestBody @Valid LoginRequest request) {
+        LoginResponseVO vo = userService.login(request);
         return Result.success(vo);
     }
 
     @PostMapping("/register")
-    public Result<Void> register(@RequestBody @Valid RegisterRequest request) {
-        userService.register(request);
-        return Result.success();
+    public Result<LoginResponseVO> register(@RequestBody @Valid RegisterRequest request) {
+        LoginResponseVO vo = userService.register(request);
+        return Result.success(vo);
     }
 
     @GetMapping("/info")
@@ -165,5 +166,24 @@ public class UserController {
         Long userId = (Long) request.getAttribute("userId");
         Page<UserVO> result = userService.getFansList(userId, page, size);
         return Result.success(PageResult.of(result));
+    }
+
+    @PostMapping("/refresh_tiken")
+    public Result<LoginResponseVO> refreshToken(@RequestBody Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+        if (refreshToken == null || refreshToken.isBlank()){
+            throw new BusinessException("refreshToken 不能为空");
+        }
+        return Result.success(userService.refreshToken(refreshToken));
+    }
+    @PostMapping("/logout")
+    public Result<Void> logout(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")){
+            token = token.substring(7);
+        }
+        userService.logout(userId, token);
+        return Result.success();
     }
 }

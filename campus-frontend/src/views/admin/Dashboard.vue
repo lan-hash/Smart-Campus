@@ -135,30 +135,13 @@ const loadStats = async () => {
       c.value = data[map[c.key]] ?? 0
       c.trend = data[`${map[c.key]}Trend`] ?? 0
     })
-    if (data.todoList) {
-      todoList.value = data.todoList
-    } else {
-      todoList.value[0].count = data.pendingReview || 0
-      todoList.value[1].count = data.reportCount || 0
-    }
+    todoList.value[0].count = data.pendingReview || 0
+    todoList.value[1].count = data.reportCount || 0
     initCharts(data)
   } catch {
-    // 接口未就绪，使用假数据兜底
-    const mock = {
-      userCount: 1286, postCount: 3452, productCount: 878,
-      orderCount: 426, reportCount: 12,
-      userTrend: 8.5, postTrend: 12.3, productTrend: -3.2, orderTrend: 6.8, reportTrend: -15
-    }
-    const map = {
-      user: 'userCount', post: 'postCount', product: 'productCount',
-      order: 'orderCount', report: 'reportCount'
-    }
-    statCards.value.forEach((c) => {
-      c.value = mock[map[c.key]]
-      c.trend = mock[`${map[c.key]}Trend`]
-    })
-    todoList.value[0].count = 18
-    todoList.value[1].count = 12
+    // 接口失败时显示0，不使用假数据
+    statCards.value.forEach((c) => { c.value = 0; c.trend = 0 })
+    todoList.value.forEach((t) => { t.count = 0 })
     initCharts(null)
   }
 }
@@ -176,8 +159,8 @@ const initLineChart = (data) => {
   lineChart = echarts.init(lineChartRef.value)
 
   const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-  const userData = data?.userTrendData || [42, 65, 58, 89, 102, 156, 134]
-  const activeData = data?.activeTrendData || [320, 432, 501, 634, 790, 930, 860]
+  const userData = data?.userTrendData || [0, 0, 0, 0, 0, 0, 0]
+  const activeData = data?.activeTrendData || [0, 0, 0, 0, 0, 0, 0]
 
   lineChart.setOption({
     tooltip: { trigger: 'axis' },
@@ -222,10 +205,10 @@ const initPieChart = (data) => {
   pieChart = echarts.init(pieChartRef.value)
 
   const pieData = data?.moduleData || [
-    { value: 3452, name: '论坛帖子' },
-    { value: 878, name: '二手商品' },
-    { value: 426, name: '代课订单' },
-    { value: 568, name: '表白墙' }
+    { value: 0, name: '论坛帖子' },
+    { value: 0, name: '二手商品' },
+    { value: 0, name: '代课订单' },
+    { value: 0, name: '表白墙' }
   ]
 
   pieChart.setOption({
