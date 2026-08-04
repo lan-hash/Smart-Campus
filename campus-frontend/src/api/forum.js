@@ -1,5 +1,11 @@
 import request from '@/utils/request'
 
+// 上传图片（通用，供编辑器使用）
+export const uploadImage = (formData) =>
+  request.post('/upload/image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+
 // 版块
 export const getCategories = (type) =>
   request.get('/forum/categories', { params: { type } })

@@ -55,7 +55,7 @@
 
           <!-- 正文内容 -->
           <div class="post-content card-base">
-            <div class="content-body" v-html="post.content"></div>
+            <MdPreview :model-value="post.content" />
             <div class="content-images" v-if="imageList.length">
               <el-image
                 v-for="(img, i) in imageList"
@@ -240,6 +240,7 @@ import {
 import { useUserStore } from '@/stores/user'
 import CommentSection from '@/components/CommentSection.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import MdPreview from '@/components/MdPreview.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -644,23 +645,6 @@ onMounted(() => {
 /* 正文 */
 .post-content {
   padding: 28px;
-}
-
-.content-body {
-  font-size: 15px;
-  line-height: 1.9;
-  color: var(--text-regular);
-  word-break: break-word;
-}
-
-.content-body :deep(img) {
-  max-width: 100%;
-  border-radius: var(--radius-sm);
-  margin: 12px 0;
-}
-
-.content-body :deep(p) {
-  margin-bottom: 12px;
 }
 
 .content-images {

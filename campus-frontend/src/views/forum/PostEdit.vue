@@ -59,14 +59,11 @@
 
               <!-- 正文 -->
               <el-form-item label="正文内容" prop="content">
-                <el-input
+                <MdEditor
                   v-model="form.content"
-                  type="textarea"
-                  :rows="12"
-                  placeholder="详细描述你的内容，支持 Markdown 基本语法..."
-                  maxlength="10000"
-                  show-word-limit
-                  resize="vertical"
+                  placeholder="详细描述你的内容，支持 Markdown 语法：标题、列表、代码块、图片、链接、表格、引用..."
+                  :height="500"
+                  :max-length="10000"
                 />
               </el-form-item>
 
@@ -158,8 +155,9 @@
               </h3>
               <ul class="tip-list">
                 <li>标题简洁明了，突出重点</li>
-                <li>正文内容详实，排版清晰</li>
-                <li>配图能让内容更生动</li>
+                <li>支持 Markdown 语法排版</li>
+                <li>可直接粘贴或拖拽上传图片</li>
+                <li>代码块支持语法高亮</li>
                 <li>选择正确的版块获得更多关注</li>
                 <li>文明发言，遵守社区规范</li>
               </ul>
@@ -183,6 +181,7 @@ import {
 } from '@/api/forum'
 import { useUserStore } from '@/stores/user'
 import ImageUpload from '@/components/ImageUpload.vue'
+import MdEditor from '@/components/MdEditor.vue'
 
 const router = useRouter()
 const route = useRoute()

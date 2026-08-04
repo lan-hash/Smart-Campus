@@ -44,14 +44,15 @@ public class AdminController {
     }
 
     /**
-     * 用户列表（分页+搜索）
+     * 用户列表（分页+搜索+状态筛选）
      */
     @GetMapping("/users")
     public Result<PageResult<UserVO>> getUserList(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword) {
-        Page<UserVO> result = adminService.getUserList(page, size, keyword);
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer status) {
+        Page<UserVO> result = adminService.getUserList(page, size, keyword, status);
         return Result.success(PageResult.of(result));
     }
 
@@ -95,14 +96,15 @@ public class AdminController {
     }
 
     /**
-     * 帖子列表
+     * 帖子列表（分页+搜索+状态筛选）
      */
     @GetMapping("/posts")
     public Result<PageResult<ForumPostVO>> getPostList(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword) {
-        Page<ForumPostVO> result = adminService.getPostList(page, size, keyword);
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer status) {
+        Page<ForumPostVO> result = adminService.getPostList(page, size, keyword, status);
         return Result.success(PageResult.of(result));
     }
 

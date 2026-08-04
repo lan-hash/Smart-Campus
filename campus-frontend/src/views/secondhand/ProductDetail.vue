@@ -161,7 +161,9 @@
         <h2 class="section-title">
           <el-icon><Document /></el-icon>商品详情
         </h2>
-        <div class="desc-content">{{ product.description || '卖家暂未填写详细描述' }}</div>
+        <div class="desc-content">
+          <MdPreview :model-value="product.description || '卖家暂未填写详细描述'" />
+        </div>
       </div>
     </div>
 
@@ -213,6 +215,7 @@ import {
   Warning, ShoppingCart, Document, EditPen, Delete
 } from '@element-plus/icons-vue'
 import EmptyState from '@/components/EmptyState.vue'
+import MdPreview from '@/components/MdPreview.vue'
 import { useUserStore } from '@/stores/user'
 import {
   getProductDetail, toggleFavorite, reportProduct, createTransaction

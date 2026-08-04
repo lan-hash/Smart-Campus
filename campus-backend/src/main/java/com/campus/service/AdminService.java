@@ -21,9 +21,9 @@ public interface AdminService {
     DashboardVO getDashboard();
 
     /**
-     * 获取用户列表（分页+搜索）
+     * 获取用户列表（分页+搜索+状态筛选）
      */
-    Page<UserVO> getUserList(int page, int size, String keyword);
+    Page<UserVO> getUserList(int page, int size, String keyword, Integer status);
 
     /**
      * 修改用户状态（封禁/解封）
@@ -41,9 +41,9 @@ public interface AdminService {
     void handleReport(Long reportId, Long adminId, HandleReportRequest request);
 
     /**
-     * 获取帖子列表（分页）
+     * 获取帖子列表（分页+搜索+状态筛选）
      */
-    Page<ForumPostVO> getPostList(int page, int size, String keyword);
+    Page<ForumPostVO> getPostList(int page, int size, String keyword, Integer status);
 
     /**
      * 修改帖子状态（正常/违规）

@@ -132,12 +132,15 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Page<UserVO> getUserList(int page, int size, String keyword) {
+    public Page<UserVO> getUserList(int page, int size, String keyword, Integer status) {
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
-            wrapper.like(SysUser::getUsername, keyword)
+            wrapper.and(w -> w.like(SysUser::getUsername, keyword)
                     .or().like(SysUser::getNickname, keyword)
-                    .or().like(SysUser::getPhone, keyword);
+                    .or().like(SysUser::getCampus, keyword));
+        }
+        if (status != null) {
+            wrapper.eq(SysUser::getStatus, status);
         }
         wrapper.orderByDesc(SysUser::getCreateTime);
         Page<SysUser> userPage = userMapper.selectPage(new Page<>(page, size), wrapper);
@@ -188,13 +191,16 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Page<ForumPostVO> getPostList(int page, int size, String keyword) {
+    public Page<ForumPostVO> getPostList(int page, int size, String keyword, Integer status) {
         LambdaQueryWrapper<ForumPost> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
-            wrapper.like(ForumPost::getTitle, keyword)
-                    .or().like(ForumPost::getContent, keyword);
+            wrapper.and(w -> w.like(ForumPost::getTitle, keyword)
+                    .or().like(ForumPost::getContent, keyword));
         }
-        wrapper.orderByDesc(ForumPost::getCreateTime);
+        if (status != null) {
+            wrapper.eq(ForumPost::getStatus, status);
+        }
+        wrapper.orderByDesc(ForumPost::getIsTop).orderByDesc(ForumPost::getCreateTime);
         Page<ForumPost> postPage = forumPostMapper.selectPage(new Page<>(page, size), wrapper);
 
         Page<ForumPostVO> voPage = new Page<>(page, size, postPage.getTotal());

@@ -90,7 +90,9 @@
           </div>
 
           <!-- 内容 -->
-          <p class="card-content" @click="toggleComment(item)">{{ item.content }}</p>
+          <div class="card-content" @click="toggleComment(item)">
+            <MdPreview :model-value="item.content" />
+          </div>
 
           <!-- 图片 -->
           <div class="card-images" v-if="parseImages(item.images).length">
@@ -231,6 +233,7 @@ import { useUserStore } from '@/stores/user'
 import CommentSection from '@/components/CommentSection.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import MdPreview from '@/components/MdPreview.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -696,8 +699,28 @@ onMounted(() => {
   color: var(--text-regular);
   margin-bottom: 14px;
   cursor: pointer;
-  white-space: pre-wrap;
   word-break: break-word;
+}
+
+.card-content :deep(p) {
+  margin: 0.5em 0;
+}
+
+.card-content :deep(p:first-child) {
+  margin-top: 0;
+}
+
+.card-content :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.card-content :deep(a) {
+  color: #ec4899;
+}
+
+.card-content :deep(strong),
+.card-content :deep(b) {
+  color: var(--text-primary);
 }
 
 .card-images {
